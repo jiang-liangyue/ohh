@@ -1,0 +1,142 @@
+# Git 常用命令速查
+> 执行目录：项目根目录（如 `E:\git`）
+> `--global` 代表全局配置，只执行一次；不带则仅作用于当前仓库
+
+## 一、仓库初始化 & 远程仓库
+```powershell
+git init                              # 当前文件夹初始化本地git仓库，生成隐藏.git文件夹
+git clone https://xxx.git             # 克隆远程仓库到本地
+git clone https://xxx.git myproj      # 克隆远程仓库，本地文件夹重命名为myproj
+
+git remote -v                         # 查看远程仓库地址(fetch拉取/push推送地址)
+git remote add origin 仓库地址        # 添加远程仓库，别名一般叫origin
+git remote set-url origin 新地址      # 修改已有origin的远程地址（origin已存在时使用，不要add）
+git remote remove origin              # 删除远程origin
+```
+
+## 二、工作区、暂存区操作
+```powershell
+git status                            # 查看当前状态：修改文件、暂存、未提交信息，最常用
+git add 文件名.md                      # 将指定文件加入暂存区，准备commit
+git add .                             # 将当前目录所有变更文件加入暂存区（不包含删除）
+git add -A                            # 全部变更：新增、修改、删除全部加入暂存
+
+git restore 文件名.md                 # 丢弃工作区修改，恢复文件到暂存区版本（未add时撤销改动）
+git reset HEAD 文件名.md              # 把文件从暂存区撤回到工作区，改动保留，取消add
+```
+
+## 三、提交（本地版本快照）
+```powershell
+git commit -m "feat: 新增README"      # 将暂存区内容提交本地仓库，必须写提交说明
+git commit --amend                    # 修改上一次commit信息；也可以把新改动合并进上一次提交
+
+git log                               # 查看提交历史，commit hash、作者、时间
+git log --oneline                     # 简洁版日志，只显示短hash+提交备注，日常首选
+git reset --hard 提交hash值           # 回退到指定版本，**工作区、暂存区全部覆盖，谨慎！**
+```
+
+## 四、分支操作（高频）
+```powershell
+git branch                            # 列出本地分支，*代表当前所在分支
+git branch dev                        # 创建名为dev的分支，不切换
+git branch -M main                    # 将当前分支重命名为main（M=强制移动/重命名）
+
+git checkout dev                      # 切换到dev分支（旧写法）
+git switch dev                        # 切换分支，新版git推荐，语义清晰
+git switch -c dev                     # 创建并立刻切换到dev分支
+
+git branch -d dev                     # 删除本地dev分支（安全，未合并会阻止）
+git branch -D dev                     # 强制删除本地dev分支
+
+git merge dev                         # 在当前分支合并dev分支进来
+```
+
+## 五、远程交互 push / pull
+```powershell
+git push origin main                  # 将本地main推送到远程origin的main分支
+git push -u origin main               # -u 设置上游追踪关系；设置后后续直接git push不用写分支名
+git push                              # 已经配置上游后，直接推送当前分支
+
+git pull                              # 拉取远程最新代码并自动合并到本地当前分支
+git fetch origin                      # 拉取远程更新，但**不合并**，可以手动对比后merge，更安全
+```
+
+## 六、配置（账号、GitHub代理）
+```powershell
+git config --global user.name "名字"        # 全局设置git用户名，GitHub用户名
+git config --global user.email "邮箱"       # 全局设置提交邮箱，GitHub注册邮箱
+git config --list                           # 查看全部git配置
+
+# git代理配置（访问github超时使用）
+git config --global http.proxy http://127.0.0.1:7890    # 设置全局http代理
+git config --global https.proxy http://127.0.0.1:7890   # 设置https代理
+git config --global --unset http.proxy                   # 清除http代理
+git config --global --unset https.proxy                  # 清除https代理
+```
+
+## 七、stash 储藏：临时保存未提交改动
+> 切换分支不想提交代码时使用
+```powershell
+git stash                             # 临时储藏当前未提交的修改，工作区变干净
+git stash list                        # 查看储藏列表
+git stash pop                         # 取出最近一次储藏并删除储藏记录
+git stash drop                        # 删除储藏
+```
+
+## 八、实用小技巧
+```powershell
+git diff                              # 对比：工作区 vs 暂存区，看哪些改动还没add
+git diff --cached                     # 对比：暂存区 vs 本地仓库，看已经add还没commit的改动
+git show 哈希值                       # 查看某次提交具体改动内容
+```
+
+## 九、日常最简工作流
+### 提交推送
+```powershell
+git status                # 先看状态
+git add .                 # 添加变更
+git commit -m "fix:修复xx问题"
+git push                  # 推送到远程
+```
+### 开始开发前拉取最新代码
+```powershell
+git pull                  # 拉取远程最新，避免冲突
+# 修改代码
+git add .
+git commit -m "xxx"
+git push
+```
+
+## 十、多远程仓库实操（一份本地代码对接多个GitHub仓库）
+> 示例别名：`origin`→ohh.git；`temp`→git‑temp.git
+> ⚠️ git命令不会自动创建GitHub仓库，需要网页手动新建空仓库，不要勾选README
+
+```powershell
+git remote -v                      # 列出全部远程仓库fetch/push地址
+
+# 修改已有origin远程地址
+git remote set-url origin https://github.com/jiang-liangyue/ohh.git
+# 新增额外远程别名temp
+git remote add temp https://github.com/jiang-liangyue/git-temp.git
+# 删除不需要的远程别名
+git remote remove temp
+
+git push                     # origin(ohh)，已配置‑u上游，直接推送
+git push temp main           # 首次推送到temp，必须写明分支main
+git push -u temp main        # 给temp设置上游追踪，之后可直接 git push temp
+git push temp
+
+git pull                     # 拉取 origin(ohh) main分支
+git pull temp main           # 拉取 temp(git‑temp) main分支
+```
+
+## 十一、常见踩坑总结
+1. `error: remote origin already exists.`：远程别名已存在，使用`set‑url`，不要`add`
+2. `Repository not found`：GitHub网页未创建对应仓库，或者账号权限/token失效
+3. 多仓库场景：新增独立别名，不要反复覆盖origin，减少出错
+4. 新远程未设置`‑u`上游，推送必须携带分支名，例：`git push temp main`
+
+---
+
+直接全选复制，保存为 `git‑note.md` 文件即可本地查阅。
+需要我可以补充一份**git冲突处理速查表**。
